@@ -2,11 +2,12 @@ package Genetic.Algorithm;
 
 import Help.Helper;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class GeneticAlgorithm {
+public class GeneticAlgorithm implements Serializable {
     private List<Genome> population;
     private int fittestGenome;
     private int populationSize;
@@ -24,10 +25,10 @@ public class GeneticAlgorithm {
         this.chromoLength = chromoLength;
         this.mutationRate = mutationRate;
         this.crossRate = crossRate;
-        population = new ArrayList<Genome>();
+        population = new ArrayList<>();
 
         for (int i = 0; i < populationSize; i++) {
-            population.add(new Genome(new ArrayList<Double>(), 0));
+            population.add(new Genome(new ArrayList<>(), 0));
 
             for (int j = 0; j < chromoLength; j++) {
                 population.get(i).addWeight(Helper.randomClamped());
@@ -44,7 +45,7 @@ public class GeneticAlgorithm {
      */
     public Genome mutate(Genome genome) {
         List<Double> weights = genome.getWeights();
-        double newValue = 0;
+        double newValue;
         for (int i = 0; i < weights.size(); i++) {
             if (Helper.randomDouble() > this.mutationRate) {
                 newValue = weights.get(i) + (Helper.randomClamped() * GeneSettings.MAX_PERTURBATION);
@@ -62,7 +63,6 @@ public class GeneticAlgorithm {
     public Genome genomeRoulette() {
         //Generate a random number between 0 & total fitness count
         double slice = Helper.randomDouble() * this.totalFitness;
-
         //This will be the chosen Genome
         Genome chosenOne = null;
 
@@ -71,12 +71,12 @@ public class GeneticAlgorithm {
         boolean found = false;
         for (int i = 0; i < this.populationSize && !found; i++) {
             fitnessSoFar += this.population.get(i).getFitness();
-
             //if the fitness so far > random number return the chromo at this point
             if (fitnessSoFar >= slice) {
                 chosenOne = this.population.get(i);
                 found = true;
             }
+
         }
 
         //If the Roullette failed give at least some random genome
@@ -84,6 +84,36 @@ public class GeneticAlgorithm {
             chosenOne = this.population.get(Helper.randomInt(0, this.populationSize));
         }
         return chosenOne;
+    }
+
+    public List<Genome> tournament() {
+        List<Genome> winners = new ArrayList<>();
+        List<Integer> freeIndexes = new ArrayList<>();
+        int index1, index2;
+
+        for (int i = 0; i < populationSize; i++) {
+            freeIndexes.add(i);
+        }
+
+        while (winners.size() < populationSize / 2) {
+            index1 = freeIndexes.get(Helper.randomInt(0, freeIndexes.size() - 1));
+            freeIndexes.remove(new Integer(index1));
+
+            if (freeIndexes.size() == 1) {
+                index2 = freeIndexes.get(0);
+            } else {
+                index2 = freeIndexes.get(Helper.randomInt(0, freeIndexes.size() - 1));
+            }
+            freeIndexes.remove(new Integer(index2));
+
+            if (population.get(index1).getFitness() > population.get(index2).getFitness()) {
+                winners.add(population.get(index1));
+            } else {
+                winners.add(population.get(index2));
+            }
+        }
+
+        return winners;
     }
 
     /**
@@ -94,25 +124,25 @@ public class GeneticAlgorithm {
      * @return both childs
      */
     public List<Genome> crossover(Genome mum, Genome dad) {
-        List<Genome> result = new ArrayList<Genome>();
+        List<Genome> result = new ArrayList<>();
         Genome baby1, baby2;
 
         //Just return parents as offspring dependent on the rate or if parents are the same
-        if (Helper.randomDouble() > this.crossRate || mum.equals(dad)) {
-            result.add(mum);
-            result.add(dad);
-            return result;
-        }
+//        if (Helper.randomDouble() > this.crossRate || mum.equals(dad)) {
+//            result.add(mum);
+//            result.add(dad);
+//            return result;
+//        }
 
         //determine a crossover point
         int crossPoint = Helper.randomInt(0, this.chromoLength);
 
         //create the offspring
 
-        List<Double> mumWeights = mum.getWeights();
-        List<Double> dadWeights = dad.getWeights();
-        baby1 = new Genome(new ArrayList<Double>(), 0);
-        baby2 = new Genome(new ArrayList<Double>(), 0);
+        List<Double> mumWeights = new ArrayList<>(mum.getWeights());
+        List<Double> dadWeights = new ArrayList<>(dad.getWeights());
+        baby1 = new Genome(new ArrayList<>(), 0);
+        baby2 = new Genome(new ArrayList<>(), 0);
 
         for (int i = 0; i < crossPoint; i++) {
             baby1.setWeight(i, mumWeights.get(i));
@@ -168,19 +198,20 @@ public class GeneticAlgorithm {
     }
 
     public List<Genome> grabNBest(int numBest, int numCopies, List<Genome> population) {
-        while (numBest-- > 0) {
-            for (int i = 0; i < numCopies; i++) {
+        while (numCopies-- > 0) {
+            for (int i = populationSize - 1; i > (populationSize - 1 - numBest); i--) {
                 population.add(this.population.get(i));
             }
         }
         return population;
     }
 
-    public List<Genome> epoch(List<Genome> oldPopulation) {
+    public List<Genome> epoch(List<Genome> oldPopulation, boolean tournament) {
         //create a temporary population to store new genomes
-        List<Genome> newPopulation = new ArrayList<Genome>();
-        List<Genome> children;
+        List<Genome> newPopulation = new ArrayList<>();
+        List<Genome> children, candidates = null;
         Genome mum, dad, baby1, baby2;
+        int candidateCounter = 0;
 
         //assign the given population to the classes population
         this.population = oldPopulation;
@@ -197,13 +228,27 @@ public class GeneticAlgorithm {
             newPopulation = grabNBest(GeneSettings.NUM_ELITES, GeneSettings.NUM_COPY_ELITES, newPopulation);
         }
 
+        if (tournament) {
+            candidates = tournament();
+            candidateCounter = candidates.size() - 1;
+        }
+
         //now we enter the GA loop
         //repeat until a new population is generated
         while (newPopulation.size() < this.populationSize) {
-            //grab two genomes
-            mum = genomeRoulette();
-            dad = genomeRoulette();
-
+            if (tournament) {
+                mum = candidates.get(candidateCounter);
+                dad = candidates.get(candidateCounter - 1);
+                if (candidateCounter <= 1) {
+                    candidateCounter = candidates.size() - 1;
+                } else {
+                    candidateCounter--;
+                }
+            } else {
+                //grab two genomes
+                mum = genomeRoulette();
+                dad = genomeRoulette();
+            }
             //create some offspring via crossover
             children = crossover(mum, dad);
             //now we mutate

@@ -1,16 +1,17 @@
 package Neural.Net;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class NeuronLayer {
+public class NeuronLayer implements Serializable {
 
     private int numNeurons;
     private List<Neuron> neurons;
 
     public NeuronLayer(int numNeurons, int inputsPerNeuron) {
         this.numNeurons = numNeurons;
-        neurons = new ArrayList<Neuron>();
+        neurons = new ArrayList<>();
 
         for (int i = 0; i < numNeurons; i++) {
             neurons.add(new Neuron(inputsPerNeuron));

@@ -1,8 +1,9 @@
 package Genetic.Algorithm;
 
+import java.io.Serializable;
 import java.util.List;
 
-public class Genome implements Comparable<Genome> {
+public class Genome implements Comparable<Genome>, Serializable {
 
     private List<Double> weights;
     private double fitness;
@@ -43,7 +44,11 @@ public class Genome implements Comparable<Genome> {
     }
 
     public void setWeight(int i, double value) {
-        this.weights.set(i, value);
+        try {
+            weights.get(i);
+        } catch (IndexOutOfBoundsException e) {
+            weights.add(i, value);
+        }
     }
 
     public void setWeights(List<Double> weights) {

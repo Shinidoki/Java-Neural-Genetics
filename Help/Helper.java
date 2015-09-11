@@ -11,9 +11,9 @@ public final class Helper {
     /**
      * @return Random float value between -1 and 1
      */
-    public static int randomClamped() {
+    public static double randomClamped() {
         Random random = new Random();
-        return (int) (random.nextDouble() * 2 - 1);
+        return (random.nextDouble() * 2 - 1);
     }
 
     public static double randomDouble() {
@@ -34,6 +34,6 @@ public final class Helper {
     }
 
     public static double sigmoid(double netInput, double response) {
-        return (1 / (1 + Math.exp((-netInput) / response)));
+        return (1 / (1 + Math.exp(-netInput / response)));
     }
 }

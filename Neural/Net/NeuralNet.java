@@ -2,18 +2,20 @@ package Neural.Net;
 
 import Help.Helper;
 
+import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 
-public class NeuralNet {
+public class NeuralNet implements Serializable {
 
     private int numInputs;
     private List<NeuronLayer> layers;
 
     public NeuralNet(int numInputs, int numOutputs, int numHiddenLayers, int neuronsPerHiddenLayer) {
         this.numInputs = numInputs;
-        layers = new ArrayList<NeuronLayer>();
+        layers = new ArrayList<>();
 
         if (numHiddenLayers > 0) {
             layers.add(new NeuronLayer(neuronsPerHiddenLayer, numInputs));
@@ -84,7 +86,7 @@ public class NeuralNet {
      * @return output of the net
      */
     public List<Double> update(List<Double> inputs) {
-        List<Double> outputs = new ArrayList<Double>();
+        List<Double> outputs = new ArrayList<>();
         double netInput;
         int neuronInputs;
         if (inputs.size() != numInputs) {
@@ -93,7 +95,10 @@ public class NeuralNet {
 
         for (int i = 0; i < layers.size(); i++) {
             if (i > 0) {
-                inputs = outputs;
+                while (inputs.size() < outputs.size()) {
+                    inputs.add(0.0);
+                }
+                Collections.copy(inputs, outputs);
             }
             outputs.clear();
 

@@ -2,17 +2,18 @@ package Neural.Net;
 
 import Help.Helper;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Neuron {
+public class Neuron implements Serializable {
 
     private int numInputs;
     private List<Double> weights;
 
     public Neuron(int numInputs) {
         this.numInputs = numInputs;
-        weights = new ArrayList<Double>();
+        weights = new ArrayList<>();
         for (int i = 0; i < numInputs + 1; i++) {
             weights.add(Helper.randomDouble());
         }
