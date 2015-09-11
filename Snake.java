@@ -5,10 +5,10 @@ import Neural.Net.NeuralNet;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,14 +16,16 @@ public class Snake extends JFrame {
     // The number of hidden layers in the NN
     private static final int NUM_HIDDENLAYERS = 1;
     // Neurons per hidden layer
-    private static final int NEURONS_PER_H_LAYER = 6;
+    private static final int NEURONS_PER_H_LAYER = 5;
     // Probability of a mutation
-    private static final double MUTATION_RATE = 0.5;
+    private static final double MUTATION_RATE = 0.3;
     // Defines how the child genomes are put together 0.7 = 70% Genome1 / 30% Genome2
     private static final double CROSS_RATE = 0.7;
+    // How many snakes per generation
+    private static final int POPULATION_SIZE = 20;
 
     // If set to true, the game board will be shown while training (way slower but you can see what your NN learned already)
-    private static final boolean VISIBLE = false;
+    private static final boolean VISIBLE = true;
 
     public static void main(String[] args) {
         GeneticAlgorithm genetics = null;
@@ -31,7 +33,7 @@ public class Snake extends JFrame {
 
             // Read from disk using FileInputStream
             FileInputStream f_in = new
-                    FileInputStream(NUM_HIDDENLAYERS + "x" + NEURONS_PER_H_LAYER + ".data");
+                    FileInputStream(POPULATION_SIZE + " Pop " + NUM_HIDDENLAYERS + "x" + NEURONS_PER_H_LAYER + ".data");
 
             // Read object using ObjectInputStream
             ObjectInputStream obj_in =
@@ -44,20 +46,21 @@ public class Snake extends JFrame {
                 // Cast object to a Vector
                 genetics = (GeneticAlgorithm) obj;
             }
-
+            f_in.close();
+            obj_in.close();
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
 
 
         List<NeuralNet> players = new ArrayList<NeuralNet>();
-        for (int i = 0; i < 20; i++) {
-            NeuralNet player = new NeuralNet(6, 4, NUM_HIDDENLAYERS, NEURONS_PER_H_LAYER);
+        for (int i = 0; i < POPULATION_SIZE; i++) {
+            NeuralNet player = new NeuralNet(5, 4, NUM_HIDDENLAYERS, NEURONS_PER_H_LAYER);
             players.add(player);
         }
 
         if (genetics == null) {
-            genetics = new GeneticAlgorithm(20, players.get(0).getNumberOfWeights(), MUTATION_RATE, CROSS_RATE);
+            genetics = new GeneticAlgorithm(POPULATION_SIZE, players.get(0).getNumberOfWeights(), MUTATION_RATE, CROSS_RATE);
         }
 
 
@@ -75,7 +78,7 @@ public class Snake extends JFrame {
                 population.get(j).setFitness(game.getFitness());
             }
 
-            population = genetics.epoch(population, true);
+            population = genetics.epoch(population, false);
             averageFitness = genetics.getAverageFitness();
             System.out.println("Generation " + i + ": Fitness: " + averageFitness + " Best: " + genetics.getBestFitness() + "\t Overall Best: " + bestFitness);
             if (averageFitness > bestFitness) {
@@ -83,11 +86,19 @@ public class Snake extends JFrame {
                 System.out.println("New Best Population!");
             }
             try {
+
                 FileOutputStream f_out = new
-                        FileOutputStream(NUM_HIDDENLAYERS + "x" + NEURONS_PER_H_LAYER + ".data");
+                        FileOutputStream(POPULATION_SIZE + " Pop " + NUM_HIDDENLAYERS + "x" + NEURONS_PER_H_LAYER + ".data.new");
                 ObjectOutputStream obj_out = new
                         ObjectOutputStream(f_out);
                 obj_out.writeObject(genetics);
+                f_out.close();
+                obj_out.close();
+                File newfile = new File(POPULATION_SIZE + " Pop " + NUM_HIDDENLAYERS + "x" + NEURONS_PER_H_LAYER + ".data.new");
+                Path newfilePath = newfile.toPath();
+                File oldfile = new File(POPULATION_SIZE + " Pop " + NUM_HIDDENLAYERS + "x" + NEURONS_PER_H_LAYER + ".data");
+                Path oldfilePath = oldfile.toPath();
+                Files.move(newfilePath, oldfilePath, StandardCopyOption.REPLACE_EXISTING);
             } catch (Exception e) {
                 System.out.println(e.getMessage());
             }

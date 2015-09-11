@@ -95,9 +95,6 @@ public class NeuralNet implements Serializable {
 
         for (int i = 0; i < layers.size(); i++) {
             if (i > 0) {
-                while (inputs.size() < outputs.size()) {
-                    inputs.add(0.0);
-                }
                 Collections.copy(inputs, outputs);
             }
             outputs.clear();
@@ -107,7 +104,7 @@ public class NeuralNet implements Serializable {
                 neuronInputs = neuron.getNumInputs();
 
                 for (int j = 0; j < neuron.getWeights().size(); j++) {
-                    if (j < neuronInputs - 1) {
+                    if (j < neuronInputs) {
                         netInput += neuron.getWeight(j) * inputs.get(j);
                     }
                 }

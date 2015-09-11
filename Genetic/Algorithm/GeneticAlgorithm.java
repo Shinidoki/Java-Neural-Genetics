@@ -128,11 +128,11 @@ public class GeneticAlgorithm implements Serializable {
         Genome baby1, baby2;
 
         //Just return parents as offspring dependent on the rate or if parents are the same
-//        if (Helper.randomDouble() > this.crossRate || mum.equals(dad)) {
-//            result.add(mum);
-//            result.add(dad);
-//            return result;
-//        }
+        if (Helper.randomDouble() > this.crossRate || mum.equals(dad)) {
+            result.add(mum);
+            result.add(dad);
+            return result;
+        }
 
         //determine a crossover point
         int crossPoint = Helper.randomInt(0, this.chromoLength);

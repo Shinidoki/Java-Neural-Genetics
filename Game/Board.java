@@ -138,12 +138,14 @@ public class Board extends JPanel implements ActionListener {
         List<Double> outputs;
         int chosenOutput = 0;
         double maxOutput = 0;
-        int[] nextFieldStatus;
+//        int[] nextFieldStatus;
 
-        nextFieldStatus = checkNextFields();
+//        nextFieldStatus = checkNextFields();
 
-        inputs.add((double) nextFieldStatus[0]);
-        inputs.add((double) nextFieldStatus[1]);
+        inputs.add((double) checkBorderDistance(x, y) / ((double) B_WIDTH / (double) DOT_SIZE));
+
+//        inputs.add((double) nextFieldStatus[0]);
+//        inputs.add((double) nextFieldStatus[1]);
 
         inputs.add(((double) apple_x / (double) B_WIDTH));
         inputs.add(((double) apple_y / (double) B_HEIGHT));
@@ -157,6 +159,7 @@ public class Board extends JPanel implements ActionListener {
                 chosenOutput = i;
             }
         }
+
         switch (chosenOutput) {
             case 0:
                 upDirection = true;
@@ -199,11 +202,29 @@ public class Board extends JPanel implements ActionListener {
 
         nextMove = move(tempX, tempY, movingDirection);
         collision = checkCollisionAt(nextMove.get(0), nextMove.get(1));
-        result[0] = collision ? 1 : -1;
+        result[0] = collision ? 0 : 1;
 
         nextMove = move(nextMove.get(0), nextMove.get(1), movingDirection);
         collision = checkCollisionAt(nextMove.get(0), nextMove.get(1));
-        result[1] = collision ? 1 : -1;
+        result[1] = collision ? 0 : 1;
+
+        return result;
+    }
+
+    private int checkBorderDistance(int[] x, int[] y) {
+        boolean collision = false;
+        int result = 0;
+        List<int[]> nextMove;
+
+        int[] tempX = x.clone();
+        int[] tempY = y.clone();
+
+        nextMove = move(tempX, tempY, movingDirection);
+        collision = checkCollisionAt(nextMove.get(0), nextMove.get(1));
+        if (!collision) {
+            result++;
+            result += checkBorderDistance(tempX, tempY);
+        }
 
         return result;
     }
@@ -225,7 +246,7 @@ public class Board extends JPanel implements ActionListener {
 
             dots++;
             if (isAi) {
-                fitness += 10;
+                fitness += 1;
             }
             locateApple();
         }
