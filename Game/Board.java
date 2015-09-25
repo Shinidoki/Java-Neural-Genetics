@@ -142,14 +142,20 @@ public class Board extends JPanel implements ActionListener {
 
 //        nextFieldStatus = checkNextFields();
 
+        //Distance to border
         inputs.add((double) checkBorderDistance(x, y) / ((double) B_WIDTH / (double) DOT_SIZE));
+
+        //Current moving direction
+        inputs.add(directionToDouble());
 
 //        inputs.add((double) nextFieldStatus[0]);
 //        inputs.add((double) nextFieldStatus[1]);
 
+        //Apple Position
         inputs.add(((double) apple_x / (double) B_WIDTH));
         inputs.add(((double) apple_y / (double) B_HEIGHT));
 
+        //Own Position
         inputs.add(((double) x[0] / (double) B_WIDTH));
         inputs.add(((double) y[0] / (double) B_HEIGHT));
         outputs = brain.update(inputs);
@@ -190,6 +196,26 @@ public class Board extends JPanel implements ActionListener {
                 movingDirection = "left";
                 break;
         }
+    }
+
+    private double directionToDouble() {
+        double direction = 0;
+
+        switch (movingDirection) {
+            case "right":
+                direction = -0.75;
+                break;
+            case "down":
+                direction = -0.25;
+                break;
+            case "left":
+                direction = 0.25;
+                break;
+            case "up":
+                direction = 0.75;
+                break;
+        }
+        return direction;
     }
 
     private int[] checkNextFields() {
@@ -246,7 +272,7 @@ public class Board extends JPanel implements ActionListener {
 
             dots++;
             if (isAi) {
-                fitness += 1;
+                fitness += 5;
             }
             locateApple();
         }

@@ -57,7 +57,7 @@ public class Snake extends JFrame {
 
         List<NeuralNet> players = new ArrayList<NeuralNet>();
         for (int i = 0; i < POPULATION_SIZE; i++) {
-            NeuralNet player = new NeuralNet(5, 4, NUM_HIDDENLAYERS, NEURONS_PER_H_LAYER);
+            NeuralNet player = new NeuralNet(6, 4, NUM_HIDDENLAYERS, NEURONS_PER_H_LAYER);
             players.add(player);
         }
 
