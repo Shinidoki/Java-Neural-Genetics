@@ -14,18 +14,20 @@ import java.util.List;
 
 public class Snake extends JFrame {
     // The number of hidden layers in the NN
-    private static final int NUM_HIDDENLAYERS = 1;
+    private static final int NUM_HIDDENLAYERS = 2;
     // Neurons per hidden layer
-    private static final int NEURONS_PER_H_LAYER = 5;
+    private static final int NEURONS_PER_H_LAYER = 8;
     // Probability of a mutation
-    private static final double MUTATION_RATE = 0.3;
+    private static final double MUTATION_RATE = 0.5;
     // Defines how the child genomes are put together 0.7 = 70% Genome1 / 30% Genome2
     private static final double CROSS_RATE = 0.7;
     // How many snakes per generation
     private static final int POPULATION_SIZE = 20;
 
     // If set to true, the game board will be shown while training (way slower but you can see what your NN learned already)
-    private static final boolean VISIBLE = true;
+    private static final boolean VISIBLE = false;
+    // If set to true, the game board will be shown while training (way slower but you can see what your NN learned already)
+    private static final int MAX_ACTIONS = 500;
 
     public static void main(String[] args) {
         GeneticAlgorithm genetics = null;
@@ -107,6 +109,7 @@ public class Snake extends JFrame {
 
 
     public Snake(Board game, boolean visible) {
+        int actionCounter = 0;
         add(game);
 
         setResizable(false);
@@ -117,7 +120,7 @@ public class Snake extends JFrame {
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setVisible(visible);
         setAlwaysOnTop(true);
-        while (!game.timerStopped()) {
+        while (actionCounter < MAX_ACTIONS && !game.timerStopped()) {
             game.actionPerformed(new ActionEvent(this, 0, "continue"));
             if (visible) {
                 try {
@@ -126,6 +129,7 @@ public class Snake extends JFrame {
                     System.out.println(e.getMessage());
                 }
             }
+            actionCounter++;
         }
         setVisible(false);
         dispose();

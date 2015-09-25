@@ -4,7 +4,6 @@ import Help.Helper;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 
@@ -95,7 +94,11 @@ public class NeuralNet implements Serializable {
 
         for (int i = 0; i < layers.size(); i++) {
             if (i > 0) {
-                Collections.copy(inputs, outputs);
+//                Collections.copy(inputs, outputs);
+                inputs.clear();
+                for (double val : outputs) {
+                    inputs.add(val);
+                }
             }
             outputs.clear();
 

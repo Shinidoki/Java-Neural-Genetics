@@ -3,9 +3,7 @@ package Genetic.Algorithm;
 import Help.Helper;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 public class GeneticAlgorithm implements Serializable {
     private List<Genome> population;
@@ -47,7 +45,7 @@ public class GeneticAlgorithm implements Serializable {
         List<Double> weights = genome.getWeights();
         double newValue;
         for (int i = 0; i < weights.size(); i++) {
-            if (Helper.randomDouble() > this.mutationRate) {
+            if (Helper.randomDouble() < this.mutationRate) {
                 newValue = weights.get(i) + (Helper.randomClamped() * GeneSettings.MAX_PERTURBATION);
                 genome.setWeight(i, newValue);
             }
@@ -85,6 +83,52 @@ public class GeneticAlgorithm implements Serializable {
         }
         return chosenOne;
     }
+
+
+    public List<Genome> select() {
+        // Record the cumulative fitness scores. It doesn't matter whether the
+        // population is sorted or not. We will use these cumulative scores to work out
+        // an index into the population. The cumulative array itself is implicitly
+        // sorted since each element must be greater than the previous one. The
+        // numerical difference between an element and the previous one is directly
+        // proportional to the probability of the corresponding candidate in the population
+        // being selected.
+        double[] cumulativeFitnesses = new double[population.size()];
+        int index, tries = 0;
+        Random rng = new Random();
+        cumulativeFitnesses[0] = population.get(0).getFitness();
+        for (int i = 1; i < population.size(); i++) {
+            double fitness = population.get(i).getFitness();
+            cumulativeFitnesses[i] = cumulativeFitnesses[i - 1] + fitness;
+        }
+        List<Genome> selection = new ArrayList<Genome>(population.size());
+        for (int i = 0; i < population.size() / 2; i++) {
+            do {
+                double randomFitness = rng.nextDouble() * cumulativeFitnesses[cumulativeFitnesses.length - 1];
+                index = Arrays.binarySearch(cumulativeFitnesses, randomFitness);
+                if (index < 0) {
+                    // Convert negative insertion point to array index.
+                    index = Math.abs(index + 1);
+                }
+                tries++;
+            } while (selection.contains(population.get(index)) && tries < populationSize);
+
+            if (tries >= populationSize) {
+                //If we don't have enough different genomes anymore just add a new random one
+                selection.add(new Genome(new ArrayList<>(), 0));
+
+                for (int j = 0; j < chromoLength; j++) {
+                    selection.get(i).addWeight(Helper.randomClamped());
+                }
+            } else {
+                selection.add(population.get(index));
+            }
+
+        }
+        return selection;
+    }
+
+
 
     public List<Genome> tournament() {
         List<Genome> winners = new ArrayList<>();
@@ -209,7 +253,7 @@ public class GeneticAlgorithm implements Serializable {
     public List<Genome> epoch(List<Genome> oldPopulation, boolean tournament) {
         //create a temporary population to store new genomes
         List<Genome> newPopulation = new ArrayList<>();
-        List<Genome> children, candidates = null;
+        List<Genome> children, candidates, candidates2 = null;
         Genome mum, dad, baby1, baby2;
         int candidateCounter = 0;
 
@@ -231,6 +275,10 @@ public class GeneticAlgorithm implements Serializable {
         if (tournament) {
             candidates = tournament();
             candidateCounter = candidates.size() - 1;
+        } else {
+            candidates = select();
+            candidates2 = select();
+            candidateCounter = 0;
         }
 
         //now we enter the GA loop
@@ -246,9 +294,15 @@ public class GeneticAlgorithm implements Serializable {
                 }
             } else {
                 //grab two genomes
-                mum = genomeRoulette();
-                dad = genomeRoulette();
+                mum = candidates.get(candidateCounter);
+                dad = candidates2.get(candidateCounter);
+                if (candidateCounter >= populationSize) {
+                    candidateCounter = 0;
+                } else {
+                    candidateCounter++;
+                }
             }
+
             //create some offspring via crossover
             children = crossover(mum, dad);
             //now we mutate
